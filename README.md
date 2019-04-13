@@ -23,7 +23,7 @@ There is a distance sensor attatched to the Raspberry Pi that reads a fixed dist
 
 <img src="https://github.com/ctcuff/MotionPy/blob/master/images/materials.jpg" width="420"></img>
 
-5) If everything is set up correctly, running [check_distance.py](https://github.com/ctcuff/MotionPy/blob/master/raspberrypi/check_distance.py) should give you a valid distance.
+5) If everything is set up correctly, running [raspberrypi/check_distance.py](https://github.com/ctcuff/MotionPy/blob/master/raspberrypi/check_distance.py) should give you a valid distance.
 6) The last step is to create a few config files I've excluded from this repo. The first one should be in /app/.../motionpy/Config.kt:
 
 ```kotlin
