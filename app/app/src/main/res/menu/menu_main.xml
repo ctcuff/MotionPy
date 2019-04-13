@@ -1,0 +1,16 @@
+<menu xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    tools:context="com.cameron.motionpy.MainActivity">
+    <item
+        android:id="@+id/action_start"
+        android:orderInCategory="100"
+        android:title="START"
+        app:showAsAction="ifRoom" />
+
+    <item
+        android:id="@+id/action_stop"
+        android:orderInCategory="200"
+        android:title="STOP"
+        app:showAsAction="ifRoom" />
+</menu>
