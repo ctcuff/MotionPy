@@ -27,19 +27,17 @@ There is a distance sensor attatched to the Raspberry Pi that reads a fixed dist
 
 ```kotlin
 // Config.kt
-class ServerConfig {
-    companion object {
-        /* *
-        * This is generated with the Python uuid lib. In this project,
-        * I simply used str(uuid4()), but any random key will do.
-        */
-        const val SERVER_KEY = "Your server key here"
-        /**
-        * Here, the "/control" route is what receives for commands.
-        * See: https://github.com/ctcuff/MotionPy/blob/master/server/app.py#L43
-        */
-        const val URL = "[Your Heroku URL here]/control"
-    }
+object Config {
+    /* *
+    * This is generated with the Python uuid lib. In this project,
+    * I just used str(uuid4()), but any random key will do.
+    */
+    const val SERVER_KEY = "Your server key here"
+    /* *
+     * Here, the "/control" route is what receives for commands.
+     * See: https://github.com/ctcuff/MotionPy/blob/master/server/app.py#L43
+     */
+    const val URL = "[Your Heroku URL here]/control"
 }
 ```
 The next one should be in raspberrypi/config.py
