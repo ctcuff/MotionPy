@@ -42,13 +42,14 @@ def send_push_notification(payload):
         print("Couldn't send notification: %s" % e)
 
 
-def database_upload(image_url):
+def database_upload(image_url, image_name):
     _id = str(uuid4())
     database.update({
         _id: {
             'time': datetime.strftime(datetime.now(), '%b, %d %Y - %I:%M:%S %p'),
             'url': image_url,
             'id': _id,
+            'image_name': image_name
         }
     })
 

@@ -124,7 +124,7 @@ class Sensor:
                     self.pics_taken += 1
 
                     url = dropbox_upload(file_name)
-                    database_upload(url)
+                    database_upload(url, os.path.basename(file_name))
 
                 send_push_notification({
                     'title': 'Movement Detected',
