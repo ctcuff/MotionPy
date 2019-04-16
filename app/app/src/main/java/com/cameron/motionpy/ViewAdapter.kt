@@ -37,6 +37,8 @@ class ViewAdapter : RecyclerView.Adapter<ViewAdapter.ViewHolder>() {
         notifyItemInserted(entries.size)
     }
 
+    fun getItem(position: Int): Entry = entries[position]
+
     fun removeAtPosition(position: Int) {
         entries.removeAt(position)
         notifyItemRemoved(position)

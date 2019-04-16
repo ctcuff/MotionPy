@@ -17,6 +17,7 @@ import com.google.firebase.database.ChildEventListener
 import com.google.firebase.database.DataSnapshot
 import com.google.firebase.database.DatabaseError
 import com.google.firebase.database.FirebaseDatabase
+import com.google.firebase.storage.FirebaseStorage
 import kotlinx.android.synthetic.main.activity_main.*
 import okhttp3.*
 import java.io.IOException
@@ -45,10 +46,11 @@ class MainActivity : AppCompatActivity(), ChildEventListener {
         setContentView(R.layout.activity_main)
 
         val database = FirebaseDatabase.getInstance()
-        val ref = database.getReference("/")
+        val storage = FirebaseStorage.getInstance()
+        val databaseRef = database.getReference("/")
         val layoutManager = LinearLayoutManager(this, LinearLayoutManager.VERTICAL, true)
 
-        ref.addChildEventListener(this)
+        databaseRef.addChildEventListener(this)
 
         recycler_view.layoutManager = layoutManager
         recycler_view.addItemDecoration(DividerItemDecoration(this, layoutManager.orientation))
@@ -67,16 +69,26 @@ class MainActivity : AppCompatActivity(), ChildEventListener {
             override fun onSwiped(viewHolder: RecyclerView.ViewHolder, direction: Int) {
                 val entryId = viewHolder.itemView.tag as String
                 val position = viewHolder.adapterPosition
+                val imageName = adapter.getItem(position).imageName ?: ""
 
                 adapter.removeAtPosition(position)
 
-                ref.child(entryId).removeValue().addOnCompleteListener {
+                databaseRef.child(entryId).removeValue().addOnCompleteListener {
                     Log.i(tag, "Deleted entry[$position] with id $entryId")
+                }
+                val storageRef = storage.getReference("captures").child(imageName)
+
+                storageRef.delete().addOnSuccessListener {
+                    Log.i(tag, "Deleted captures/$imageName")
+                }.addOnFailureListener { e ->
+                    Log.i(tag, "Failed to delete captures/$imageName", e)
                 }
             }
         })
 
         touchHelper.attachToRecyclerView(recycler_view)
+
+
     }
 
     override fun onCreateOptionsMenu(menu: Menu?): Boolean {
@@ -106,7 +118,7 @@ class MainActivity : AppCompatActivity(), ChildEventListener {
         var data = dataSnapshot.value ?: return
         data = data as Map<String, String>
 
-        val entry = Entry(data["id"], data["time"], data["url"])
+        val entry = Entry(data["id"], data["time"], data["url"], data["image_name"])
         adapter.addItem(entry)
         // Makes sure the newest items always appears at the top
         recycler_view.smoothScrollToPosition(adapter.itemCount - 1)
@@ -115,7 +127,6 @@ class MainActivity : AppCompatActivity(), ChildEventListener {
     }
 
     override fun onChildRemoved(dataSnapshot: DataSnapshot) {
-        Log.i(tag, "Entry removed")
     }
 
     override fun onCancelled(error: DatabaseError) {
