@@ -3,7 +3,7 @@
 A motion detection system for a Raspberry Pi 3 along with an Android app to control it. 
 
 ### How does it work? 
-There is a distance sensor attatched to the Raspberry Pi that reads a fixed distance at a set interval, for example, 120 cm every 0.02 seconds. When that distance gets lower than a certain threshold (40 cm in this project), the Pi captures an image, uploads it to Dropbox, and then uses FirebaseCloudMessaging to send a notification containing a timestamp and image url to your phone. In order for the phone to send messages to the Raspberry Pi, I set up a Heroku server running Flask to listen for web requests. The route that listens for requests is protcted by a server key that you'll need to generate (to prevent random access). When it gets a command, that command is sent to the Raspberry Pi.
+There is a distance sensor attatched to the Raspberry Pi that reads a fixed distance at a set interval, for example, 120 cm every 0.02 seconds. When that distance gets lower than a certain threshold (40 cm in this project), the Pi captures an image, uploads it to Firebase Storage, and then uses Firebase Cloud Messaging to send a notification containing a timestamp and image url to your phone. In order for the phone to send messages to the Raspberry Pi, I set up a Heroku server running Flask to listen for web requests. The route that listens for requests is protcted by a server key that you'll need to generate (to prevent random access). When it gets a command, that command is sent to the Raspberry Pi.
 
 ### Required parts
 1) [Raspberry Pi 3](https://www.adafruit.com/product/3775?gclid=Cj0KCQjw7sDlBRC9ARIsAD-pDFraBQQclP4U5d4Z5qLc5kEgVZE71GuaBx1SW1VR0xpsSzxjjSjf1ycaAuubEALw_wcB)
@@ -17,14 +17,13 @@ There is a distance sensor attatched to the Raspberry Pi that reads a fixed dist
 
 ### Setting it up
 1) Before setting up the Raspberry Pi, head over to [Firebase](https://firebase.google.com/) and create a new app. In order to be able to send Firebase messages, you'll need a [device registration token](https://firebase.google.com/docs/cloud-messaging/android/client).
-2) Head over to [Dropbox's site](https://www.dropbox.com/developers) to create a console app. Take note of your token and oauth token.
-3) Set up a quick Heroku site and take note of the url.
-4) This part might depend on how you want to set up the sensor. Take the 4 jumper wires and connect them to the following GPIO pins on the Pi: 5v, Ground, GPIO 4, GPIO 18. ([See this video for a visual](https://www.youtube.com/watch?v=kqJ8WYQu68w&)). Again the setup depends but the end result should look something like this:
+2) Set up a quick Heroku site and take note of the url.
+3) This part might depend on how you want to set up the sensor. Take the 4 jumper wires and connect them to the following GPIO pins on the Pi: 5v, Ground, GPIO 4, GPIO 18. ([See this video for a visual](https://www.youtube.com/watch?v=kqJ8WYQu68w&)). Again the setup depends but the end result should look something like this:
 
 <img src="https://github.com/ctcuff/MotionPy/blob/master/images/materials.jpg" width="420"></img>
 
-5) If everything is set up correctly, running [raspberrypi/check_distance.py](https://github.com/ctcuff/MotionPy/blob/master/raspberrypi/check_distance.py) should give you a valid distance.
-6) The last step is to create a few config files I've excluded from this repo. The first one should be in /app/.../motionpy/Config.kt:
+4) If everything is set up correctly, running [raspberrypi/check_distance.py](https://github.com/ctcuff/MotionPy/blob/master/raspberrypi/check_distance.py) should give you a valid distance.
+5) The last step is to create a few config files I've excluded from this repo. The first one should be in /app/.../motionpy/Config.kt:
 
 ```kotlin
 // Config.kt
@@ -47,16 +46,12 @@ The next one should be in raspberrypi/config.py
 ```python
 # Find this in Firebase project settings under the cloud messaging tab.
 API_KEY = 'Firebase Legacy Server key'
+# This is the name of your Firebase App
+PROJECT_ID = 'Your project if here'
 # This can be found with step 1 of the setup.
 REGISTRATION_ID = 'Device regidtration id'
-# This is in Firebase under the Develop > Database (it's the realtime database URL) 
-DATABASE_URL = 'Your Firebase databse url'
 # This is the same url thats in Config.kt (minus the /control route)
 SERVER_URL = 'Your Heroku server URL'
-# These 2 tokens can be found in your Dropbox app's console
-DBOX_OAUTH_TOKEN = 'Your Dropbox Oauth token'
-DBOX_TOKEN = 'Your Dropbox API token'
-
 ```
 Lastly, this config should bein server/config.py
 ```python
