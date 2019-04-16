@@ -142,8 +142,8 @@ class MainActivity : AppCompatActivity(), ChildEventListener {
     private fun sendCommand(command: String, item: MenuItem?) {
         item?.isEnabled = false
         val request = Request.Builder()
-                .url(ServerConfig.URL)
-                .addHeader("key", ServerConfig.SERVER_KEY)
+                .url(Config.URL)
+                .addHeader("key", Config.SERVER_KEY)
                 .addHeader("command", command)
                 .build()
         client.newCall(request).enqueue(object : Callback {
