@@ -13,7 +13,7 @@ class Sensor:
     # The distance in centimeters that counts as motion.
     THRESHOLD = 40
     # The maximum amount of pictures that can be saved.
-    PICTURE_LIMIT = 10
+    PICTURE_LIMIT = 50
     # The number of seconds between sensor readings before the
     # program stops itself.
     MAX_PING_TIMEOUT = 30
@@ -111,15 +111,15 @@ class Sensor:
         if distance <= self.THRESHOLD:
             if time() - self.last_taken >= self.PIC_CAPTURE_DELAY:
                 # Will format the date as: Apr-04-2019_11_14_00_437389PM
-                file_date_format = '%b-%d-%Y_%I_%M_%S_%f%p'
+                file_date_format = str(datetime.strftime(datetime.now(), '%b-%d-%Y_%I_%M_%S_%f%p'))
                 # Will format the date as: 'Apr, 04 2019 - 11:14:00 AM'
-                notif_date_format = '%b, %d %Y - %I:%M:%S %p'
+                notif_date_format = str(datetime.strftime(datetime.now(), '%b, %d %Y - %I:%M:%S %p'))
 
                 url = ''
-                print('Movement: %s' % str(datetime.strftime(datetime.now(), notif_date_format)))
+                print('Movement: %s' % notif_date_format)
 
                 if self.pics_taken < self.PICTURE_LIMIT:
-                    file_name = 'captures/%s.jpg' % str(datetime.strftime(datetime.now(), file_date_format))
+                    file_name = 'captures/%s.jpg' % file_date_format
                     self.camera.capture(file_name)
                     self.pics_taken += 1
 
@@ -128,9 +128,7 @@ class Sensor:
 
                 send_push_notification({
                     'title': 'Movement Detected',
-                    'body': 'Movement has been detected. Time: %s' % str(
-                        datetime.strftime(datetime.now(), notif_date_format)
-                    ),
+                    'body': 'Movement has been detected. Time: %s' % notif_date_format,
                     'summary': 'Raspberry Pi',
                     'is_error': False,
                     'img_url': url
