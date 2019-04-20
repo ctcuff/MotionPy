@@ -44,11 +44,13 @@ class MainActivity : AppCompatActivity(), ChildEventListener {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
+        toolbar.setTitleTextColor(resources.getColor(R.color.colorSecondaryDark))
+        setSupportActionBar(toolbar)
 
         val database = FirebaseDatabase.getInstance()
         val storage = FirebaseStorage.getInstance()
         val databaseRef = database.getReference("/")
-        val layoutManager = LinearLayoutManager(this, LinearLayoutManager.VERTICAL, true)
+        val layoutManager = LinearLayoutManager(this, LinearLayoutManager.VERTICAL, false)
 
         databaseRef.addChildEventListener(this)
 
@@ -70,13 +72,13 @@ class MainActivity : AppCompatActivity(), ChildEventListener {
                 val entryId = viewHolder.itemView.tag as String
                 val position = viewHolder.adapterPosition
                 val imageName = adapter.getItem(position).imageName ?: ""
+                val storageRef = storage.getReference("captures").child(imageName)
 
                 adapter.removeAtPosition(position)
 
                 databaseRef.child(entryId).removeValue().addOnCompleteListener {
                     Log.i(tag, "Deleted entry[$position] with id $entryId")
                 }
-                val storageRef = storage.getReference("captures").child(imageName)
 
                 storageRef.delete().addOnSuccessListener {
                     Log.i(tag, "Deleted captures/$imageName")
@@ -121,7 +123,7 @@ class MainActivity : AppCompatActivity(), ChildEventListener {
         val entry = Entry(data["id"], data["time"], data["url"], data["image_name"])
         adapter.addItem(entry)
         // Makes sure the newest items always appears at the top
-        recycler_view.smoothScrollToPosition(adapter.itemCount - 1)
+        recycler_view.smoothScrollToPosition(0)
 
         Log.i(tag, entry.toString())
     }

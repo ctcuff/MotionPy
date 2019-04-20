@@ -33,8 +33,9 @@ class ViewAdapter : RecyclerView.Adapter<ViewAdapter.ViewHolder>() {
     }
 
     fun addItem(entry: Entry) {
-        entries.add(entry)
-        notifyItemInserted(entries.size)
+        // Ensures the newest entries always appear at the top
+        entries.add(0, entry)
+        notifyItemInserted(0)
     }
 
     fun getItem(position: Int): Entry = entries[position]
