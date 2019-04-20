@@ -5,8 +5,10 @@ import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
 import android.os.Bundle
+import android.support.v4.content.ContextCompat
 import android.support.v7.app.AppCompatActivity
 import android.support.v7.widget.DividerItemDecoration
+import android.support.v7.widget.GridLayoutManager
 import android.support.v7.widget.LinearLayoutManager
 import android.support.v7.widget.RecyclerView
 import android.support.v7.widget.helper.ItemTouchHelper
@@ -47,15 +49,26 @@ class MainActivity : AppCompatActivity(), ChildEventListener {
         toolbar.setTitleTextColor(resources.getColor(R.color.colorSecondaryDark))
         setSupportActionBar(toolbar)
 
+        var grid = false
         val database = FirebaseDatabase.getInstance()
         val storage = FirebaseStorage.getInstance()
         val databaseRef = database.getReference("/")
-        val layoutManager = LinearLayoutManager(this, LinearLayoutManager.VERTICAL, false)
+        val linearManager = LinearLayoutManager(this, LinearLayoutManager.VERTICAL, false)
+        val gridManager = GridLayoutManager(this, 2, GridLayoutManager.VERTICAL, false)
+
+        toggle_layout.setOnClickListener {
+            toggle_layout.setImageDrawable(
+                    ContextCompat.getDrawable(this,
+                    if (grid) R.drawable.ic_list_24dp
+                    else R.drawable.ic_view_compact_24dp)
+            )
+            grid = !grid
+        }
 
         databaseRef.addChildEventListener(this)
 
-        recycler_view.layoutManager = layoutManager
-        recycler_view.addItemDecoration(DividerItemDecoration(this, layoutManager.orientation))
+        recycler_view.layoutManager = linearManager
+        recycler_view.addItemDecoration(DividerItemDecoration(this, linearManager.orientation))
         recycler_view.setHasFixedSize(true)
         recycler_view.adapter = adapter
 
@@ -89,8 +102,6 @@ class MainActivity : AppCompatActivity(), ChildEventListener {
         })
 
         touchHelper.attachToRecyclerView(recycler_view)
-
-
     }
 
     override fun onCreateOptionsMenu(menu: Menu?): Boolean {
@@ -100,8 +111,12 @@ class MainActivity : AppCompatActivity(), ChildEventListener {
 
     override fun onOptionsItemSelected(item: MenuItem?): Boolean {
         when (item?.itemId) {
-            R.id.action_start -> { sendCommand("start", item) }
-            R.id.action_stop -> { sendCommand("stop", item) }
+            R.id.action_start -> {
+                sendCommand("start", item)
+            }
+            R.id.action_stop -> {
+                sendCommand("stop", item)
+            }
         }
         return true
     }
