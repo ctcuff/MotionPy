@@ -46,10 +46,10 @@ class MainActivity : AppCompatActivity(), ChildEventListener {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
-        toolbar.setTitleTextColor(resources.getColor(R.color.colorSecondaryDark))
+        toolbar.setTitleTextColor(ContextCompat.getColor(this, R.color.colorSecondaryDark))
         setSupportActionBar(toolbar)
 
-        var grid = false
+        var useGrid = false
         val database = FirebaseDatabase.getInstance()
         val storage = FirebaseStorage.getInstance()
         val databaseRef = database.getReference("/")
@@ -57,12 +57,14 @@ class MainActivity : AppCompatActivity(), ChildEventListener {
         val gridManager = GridLayoutManager(this, 2, GridLayoutManager.VERTICAL, false)
 
         toggle_layout.setOnClickListener {
+            useGrid = !useGrid
             toggle_layout.setImageDrawable(
                     ContextCompat.getDrawable(this,
-                    if (grid) R.drawable.ic_list_24dp
-                    else R.drawable.ic_view_compact_24dp)
+                            if (useGrid) R.drawable.ic_list_24dp
+                            else R.drawable.ic_view_compact_24dp)
             )
-            grid = !grid
+            adapter.swapLayout(useGrid)
+            recycler_view.layoutManager = if (useGrid) gridManager else linearManager
         }
 
         databaseRef.addChildEventListener(this)
@@ -111,12 +113,8 @@ class MainActivity : AppCompatActivity(), ChildEventListener {
 
     override fun onOptionsItemSelected(item: MenuItem?): Boolean {
         when (item?.itemId) {
-            R.id.action_start -> {
-                sendCommand("start", item)
-            }
-            R.id.action_stop -> {
-                sendCommand("stop", item)
-            }
+            R.id.action_start -> sendCommand("start", item)
+            R.id.action_stop -> sendCommand("stop", item)
         }
         return true
     }
@@ -131,13 +129,15 @@ class MainActivity : AppCompatActivity(), ChildEventListener {
         unregisterReceiver(receiver)
     }
 
+    @Suppress("UNCHECKED_CAST")
     override fun onChildAdded(dataSnapshot: DataSnapshot, prevChild: String?) {
         var data = dataSnapshot.value ?: return
         data = data as Map<String, String>
 
         val entry = Entry(data["id"], data["time"], data["url"], data["image_name"])
         adapter.addItem(entry)
-        // Makes sure the newest items always appears at the top
+        // Makes sure the newest item always appears at the top
+        // of the list
         recycler_view.smoothScrollToPosition(0)
 
         Log.i(tag, entry.toString())
@@ -153,7 +153,6 @@ class MainActivity : AppCompatActivity(), ChildEventListener {
     }
 
     override fun onChildChanged(dataSnapshot: DataSnapshot, prevChild: String?) {
-
     }
 
     private fun sendCommand(command: String, item: MenuItem?) {
