@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <plurals name="items_removed">
+        <item quantity="one">Removed %d item</item>
+        <item quantity="other">Removed %d items</item>
+    </plurals>
+
+    <plurals name="items_deleted">
+        <item quantity="one">Deleted %d item</item>
+        <item quantity="other">Deleted %d items</item>
+    </plurals>
+</resources>

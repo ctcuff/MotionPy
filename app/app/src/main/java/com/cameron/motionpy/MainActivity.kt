@@ -181,15 +181,16 @@ class MainActivity : AppCompatActivity(), ChildEventListener {
         if (deletedEntryQueue.isEmpty())
             return
 
-        val snackbar = Snackbar.make(root, "Items removed: ${deletedEntryQueue.size}", Snackbar.LENGTH_LONG)
+        val size = deletedEntryQueue.size
+        val formattedRemoved = resources.getQuantityString(R.plurals.items_removed, size, size)
+        val formattedDeleted = resources.getQuantityString(R.plurals.items_deleted, size, size)
+
+        val snackbar = Snackbar.make(root, formattedRemoved, Snackbar.LENGTH_LONG)
                 .addCallback(object : Snackbar.Callback() {
                     override fun onDismissed(transientBottomBar: Snackbar?, event: Int) {
                         // Clears all queues when the snackbar dismisses itself
                         if (event == Snackbar.Callback.DISMISS_EVENT_TIMEOUT) {
-                            Toast.makeText(
-                                    this@MainActivity,
-                                    "Deleted items: ${deletedEntryQueue.size}",
-                                    Toast.LENGTH_SHORT).show()
+                            Toast.makeText(this@MainActivity, formattedDeleted, Toast.LENGTH_SHORT).show()
                             clearQueue()
                         }
                     }
