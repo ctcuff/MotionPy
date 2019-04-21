@@ -5,6 +5,7 @@ import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
 import android.os.Bundle
+import android.support.design.widget.Snackbar
 import android.support.v4.content.ContextCompat
 import android.support.v7.app.AppCompatActivity
 import android.support.v7.widget.DividerItemDecoration
@@ -15,6 +16,7 @@ import android.support.v7.widget.helper.ItemTouchHelper
 import android.util.Log
 import android.view.Menu
 import android.view.MenuItem
+import android.widget.Toast
 import com.google.firebase.database.ChildEventListener
 import com.google.firebase.database.DataSnapshot
 import com.google.firebase.database.DatabaseError
@@ -29,6 +31,15 @@ class MainActivity : AppCompatActivity(), ChildEventListener {
     private val tag = MainActivity::class.java.simpleName
     private val client = OkHttpClient()
     private val adapter = ViewAdapter()
+
+    // These lists save deleted items and their properties
+    // so they can be added back to the adapter if "Undo" is pressed
+    private val deletedEntryQueue = mutableListOf<Entry>()
+    private val deletedPositions = mutableListOf<Int>()
+    private val deletedIdQueue = mutableListOf<String>()
+
+    private val storageRef = FirebaseStorage.getInstance().getReference("captures")
+    private val databaseRef = FirebaseDatabase.getInstance().getReference("/")
 
     // This is the receiver that listens for changes in status or
     // configuration of the Raspberry Pi
@@ -50,9 +61,6 @@ class MainActivity : AppCompatActivity(), ChildEventListener {
         setSupportActionBar(toolbar)
 
         var useGrid = false
-        val database = FirebaseDatabase.getInstance()
-        val storage = FirebaseStorage.getInstance()
-        val databaseRef = database.getReference("/")
         val linearManager = LinearLayoutManager(this, LinearLayoutManager.VERTICAL, false)
         val gridManager = GridLayoutManager(this, 2, GridLayoutManager.VERTICAL, false)
 
@@ -86,20 +94,16 @@ class MainActivity : AppCompatActivity(), ChildEventListener {
             override fun onSwiped(viewHolder: RecyclerView.ViewHolder, direction: Int) {
                 val entryId = viewHolder.itemView.tag as String
                 val position = viewHolder.adapterPosition
-                val imageName = adapter.getItem(position).imageName ?: ""
-                val storageRef = storage.getReference("captures").child(imageName)
+
+                // Add the deleted item to a queue so it can be
+                // re-added if "Undo" is pressed
+                deletedEntryQueue.add(adapter.getItem(position))
+                deletedPositions.add(position)
+                deletedIdQueue.add(entryId)
 
                 adapter.removeAtPosition(position)
 
-                databaseRef.child(entryId).removeValue().addOnCompleteListener {
-                    Log.i(tag, "Deleted entry[$position] with id $entryId")
-                }
-
-                storageRef.delete().addOnSuccessListener {
-                    Log.i(tag, "Deleted captures/$imageName")
-                }.addOnFailureListener { e ->
-                    Log.i(tag, "Failed to delete captures/$imageName", e)
-                }
+                showDeleteSnackbar()
             }
         })
 
@@ -136,8 +140,7 @@ class MainActivity : AppCompatActivity(), ChildEventListener {
 
         val entry = Entry(data["id"], data["time"], data["url"], data["image_name"])
         adapter.addItem(entry)
-        // Makes sure the newest item always appears at the top
-        // of the list
+        // Makes sure the newest item always appears at the top of the list
         recycler_view.smoothScrollToPosition(0)
 
         Log.i(tag, entry.toString())
@@ -172,5 +175,64 @@ class MainActivity : AppCompatActivity(), ChildEventListener {
                 Log.i(tag, "Response: ${response.body()?.string()}")
             }
         })
+    }
+
+    private fun showDeleteSnackbar() {
+        if (deletedEntryQueue.isEmpty())
+            return
+
+        val snackbar = Snackbar.make(root, "Items removed: ${deletedEntryQueue.size}", Snackbar.LENGTH_LONG)
+                .addCallback(object : Snackbar.Callback() {
+                    override fun onDismissed(transientBottomBar: Snackbar?, event: Int) {
+                        // Clears all queues when the snackbar dismisses itself
+                        if (event == Snackbar.Callback.DISMISS_EVENT_TIMEOUT) {
+                            Toast.makeText(
+                                    this@MainActivity,
+                                    "Deleted items: ${deletedEntryQueue.size}",
+                                    Toast.LENGTH_SHORT).show()
+                            clearQueue()
+                        }
+                    }
+                })
+
+        // Add the deleted item back to the adapter and
+        // remove it from the queue
+        snackbar.setAction("Undo") {
+            if (deletedEntryQueue.size >= 1) {
+                val removedItem = deletedEntryQueue.last()
+                val removedPosition = deletedPositions.last()
+
+                deletedEntryQueue.removeAt(deletedEntryQueue.size - 1)
+                deletedPositions.removeAt(deletedPositions.size - 1)
+                deletedIdQueue.removeAt(deletedIdQueue.size - 1)
+
+                adapter.addItem(removedItem, removedPosition)
+                showDeleteSnackbar()
+            }
+        }
+        snackbar.show()
+    }
+
+    private fun clearQueue() {
+        deletedEntryQueue.forEachIndexed { index, entry ->
+            val imageName = entry.imageName ?: ""
+            val id = deletedIdQueue[index]
+
+            storageRef.child(imageName).delete().addOnSuccessListener {
+                Log.i(tag, "Deleted captures/$imageName")
+            }.addOnFailureListener { e ->
+                Log.i(tag, "Failed to delete captures/$imageName", e)
+            }
+
+            databaseRef.child(id).removeValue().addOnSuccessListener {
+                Log.i(tag, "Deleted entry with id $id")
+            }.addOnFailureListener { e ->
+                Log.i(tag, "Failed to delete entry with is $id", e)
+            }
+        }
+
+        deletedPositions.clear()
+        deletedEntryQueue.clear()
+        deletedIdQueue.clear()
     }
 }

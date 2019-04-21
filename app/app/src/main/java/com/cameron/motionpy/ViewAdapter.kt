@@ -2,13 +2,12 @@ package com.cameron.motionpy
 
 import android.annotation.SuppressLint
 import android.support.v7.widget.RecyclerView
-import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import com.squareup.picasso.Picasso
-import kotlinx.android.synthetic.main.rv_item_list.view.*
 import kotlinx.android.synthetic.main.rv_item_grid.view.*
+import kotlinx.android.synthetic.main.rv_item_list.view.*
 
 class ViewAdapter : RecyclerView.Adapter<ViewAdapter.ViewHolder>() {
 
@@ -47,10 +46,9 @@ class ViewAdapter : RecyclerView.Adapter<ViewAdapter.ViewHolder>() {
         notifyDataSetChanged()
     }
 
-    fun addItem(entry: Entry) {
-        // Ensures the newest entries always appear at the top
-        entries.add(0, entry)
-        notifyItemInserted(0)
+    fun addItem(entry: Entry, position: Int = 0) {
+        entries.add(position, entry)
+        notifyItemInserted(position)
     }
 
     fun getItem(position: Int): Entry = entries[position]
