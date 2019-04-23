@@ -1,6 +1,7 @@
 package com.cameron.motionpy
 
-import android.annotation.SuppressLint
+import android.graphics.drawable.ColorDrawable
+import android.support.v4.content.ContextCompat
 import android.support.v7.widget.RecyclerView
 import android.view.LayoutInflater
 import android.view.View
@@ -11,6 +12,7 @@ import kotlinx.android.synthetic.main.rv_item_list.view.*
 
 class ViewAdapter : RecyclerView.Adapter<ViewAdapter.ViewHolder>() {
 
+    var onEntryClickListener: (String) -> Unit = { }
     private val entries = mutableListOf<Entry>()
     private var useGrid = false
 
@@ -25,19 +27,18 @@ class ViewAdapter : RecyclerView.Adapter<ViewAdapter.ViewHolder>() {
             if (useGrid) R.layout.rv_item_grid
             else R.layout.rv_item_list
 
-    @SuppressLint("SetTextI18n")
     override fun onBindViewHolder(holder: ViewHolder, position: Int) {
-        val entry = entries[position]
-
         with(holder.itemView) {
+            val entry = entries[position]
+            val imageView = if (useGrid) item_image_grid else item_image_list
+            val placeholder = ColorDrawable(ContextCompat.getColor(context, R.color.colorPrimaryDark))
+
             tag = entry.id
-            if (useGrid) {
-                Picasso.get().load(entry.url).into(item_image_grid)
-            } else {
-                item_id.text = "ID: ${entry.id}"
-                item_time.text = "Time: ${entry.time}"
-                Picasso.get().load(entry.url).into(item_image)
-            }
+            item_time?.text = resources.getString(R.string.capture_time, entry.time)
+
+            Picasso.get().load(entry.url)
+                    .placeholder(placeholder)
+                    .into(imageView)
         }
     }
 
@@ -58,5 +59,13 @@ class ViewAdapter : RecyclerView.Adapter<ViewAdapter.ViewHolder>() {
         notifyItemRemoved(position)
     }
 
-    inner class ViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView)
+    inner class ViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView), View.OnClickListener {
+        init {
+            itemView.setOnClickListener(this)
+        }
+
+        override fun onClick(view: View?) {
+            onEntryClickListener(entries[adapterPosition].id!!)
+        }
+    }
 }
