@@ -3,28 +3,23 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:layout_margin="8dp"
+    android:layout_marginTop="8dp"
+    android:layout_marginBottom="8dp"
     android:orientation="vertical">
 
-    <TextView
-        android:id="@+id/item_id"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:textSize="16sp"
-        tools:text="ID: 3f9698a4-97ca-484b-90dc-7b7cb11fc776" />
-
     <ImageView
-        tools:src="@color/colorPrimaryDark"
-        android:id="@+id/item_image"
+        android:id="@+id/item_image_list"
         android:layout_width="match_parent"
-        android:layout_height="300dp" />
+        android:layout_height="300dp"
+        tools:src="@color/colorPrimaryDark" />
 
     <TextView
-        android:layout_marginTop="8dp"
         android:id="@+id/item_time"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:textSize="20sp"
-        tools:text="Time: Apr, 06 2019 - 07:03:38 PM" />
+        android:layout_marginStart="8dp"
+        android:layout_marginTop="2dp"
+        android:textSize="12sp"
+        tools:text="Captured: Apr, 06 2019 - 07:03:38 PM" />
 
 </LinearLayout>

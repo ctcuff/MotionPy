@@ -4,6 +4,7 @@ import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
+import android.graphics.Color
 import android.os.Bundle
 import android.support.design.widget.Snackbar
 import android.support.v4.content.ContextCompat
@@ -16,6 +17,7 @@ import android.support.v7.widget.helper.ItemTouchHelper
 import android.util.Log
 import android.view.Menu
 import android.view.MenuItem
+import android.view.View
 import android.widget.Toast
 import com.google.firebase.database.ChildEventListener
 import com.google.firebase.database.DataSnapshot
@@ -57,12 +59,12 @@ class MainActivity : AppCompatActivity(), ChildEventListener {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
-        toolbar.setTitleTextColor(ContextCompat.getColor(this, R.color.colorSecondaryDark))
         setSupportActionBar(toolbar)
 
         var useGrid = false
         val linearManager = LinearLayoutManager(this, LinearLayoutManager.VERTICAL, false)
         val gridManager = GridLayoutManager(this, 2, GridLayoutManager.VERTICAL, false)
+        val itemDecor = DividerItemDecoration(this, linearManager.orientation)
 
         toggle_layout.setOnClickListener {
             useGrid = !useGrid
@@ -73,12 +75,22 @@ class MainActivity : AppCompatActivity(), ChildEventListener {
             )
             adapter.swapLayout(useGrid)
             recycler_view.layoutManager = if (useGrid) gridManager else linearManager
+
+            if (useGrid) {
+                recycler_view.removeItemDecoration(itemDecor)
+            } else {
+                recycler_view.addItemDecoration(itemDecor)
+            }
+        }
+
+        adapter.onEntryClickListener = { entryId ->
+            Toast.makeText(this, "id: $entryId", Toast.LENGTH_LONG).show()
         }
 
         databaseRef.addChildEventListener(this)
 
         recycler_view.layoutManager = linearManager
-        recycler_view.addItemDecoration(DividerItemDecoration(this, linearManager.orientation))
+        recycler_view.addItemDecoration(itemDecor)
         recycler_view.setHasFixedSize(true)
         recycler_view.adapter = adapter
 
@@ -102,6 +114,9 @@ class MainActivity : AppCompatActivity(), ChildEventListener {
                 deletedIdQueue.add(entryId)
 
                 adapter.removeAtPosition(position)
+
+                if (adapter.itemCount == 0)
+                    toggleEmptyView(true)
 
                 showDeleteSnackbar()
             }
@@ -142,23 +157,22 @@ class MainActivity : AppCompatActivity(), ChildEventListener {
         adapter.addItem(entry)
         // Makes sure the newest item always appears at the top of the list
         recycler_view.smoothScrollToPosition(0)
+        toggleEmptyView(false)
 
         Log.i(tag, entry.toString())
     }
 
-    override fun onChildRemoved(dataSnapshot: DataSnapshot) {
-    }
+    override fun onChildRemoved(dataSnapshot: DataSnapshot) {}
 
-    override fun onCancelled(error: DatabaseError) {
-    }
+    override fun onCancelled(error: DatabaseError) {}
 
-    override fun onChildMoved(dataSnapshot: DataSnapshot, prevChild: String?) {
-    }
+    override fun onChildMoved(dataSnapshot: DataSnapshot, prevChild: String?) {}
 
-    override fun onChildChanged(dataSnapshot: DataSnapshot, prevChild: String?) {
-    }
+    override fun onChildChanged(dataSnapshot: DataSnapshot, prevChild: String?) {}
 
     private fun sendCommand(command: String, item: MenuItem?) {
+        // Disable the command from the menu so the same command
+        // can't be sent multiple times
         item?.isEnabled = false
         val request = Request.Builder()
                 .url(Config.URL)
@@ -175,6 +189,11 @@ class MainActivity : AppCompatActivity(), ChildEventListener {
                 Log.i(tag, "Response: ${response.body()?.string()}")
             }
         })
+    }
+
+    fun toggleEmptyView(show: Boolean) {
+        tv_no_captures.visibility = if (show) View.VISIBLE else View.INVISIBLE
+        iv_empty_box.visibility = if (show) View.VISIBLE else View.INVISIBLE
     }
 
     private fun showDeleteSnackbar() {
@@ -194,21 +213,22 @@ class MainActivity : AppCompatActivity(), ChildEventListener {
                             clearQueue()
                         }
                     }
-                })
+                }).setActionTextColor(Color.rgb(66, 134, 244))
 
         // Add the deleted item back to the adapter and
         // remove it from the queue
         snackbar.setAction("Undo") {
-            if (deletedEntryQueue.size >= 1) {
+            if (deletedEntryQueue.isNotEmpty()) {
                 val removedItem = deletedEntryQueue.last()
                 val removedPosition = deletedPositions.last()
 
-                deletedEntryQueue.removeAt(deletedEntryQueue.size - 1)
-                deletedPositions.removeAt(deletedPositions.size - 1)
-                deletedIdQueue.removeAt(deletedIdQueue.size - 1)
+                deletedEntryQueue.removeAt(deletedEntryQueue.lastIndex)
+                deletedPositions.removeAt(deletedPositions.lastIndex)
+                deletedIdQueue.removeAt(deletedIdQueue.lastIndex)
 
                 adapter.addItem(removedItem, removedPosition)
                 showDeleteSnackbar()
+                toggleEmptyView(false)
             }
         }
         snackbar.show()
