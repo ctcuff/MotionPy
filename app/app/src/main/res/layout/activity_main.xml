@@ -39,11 +39,26 @@
                 android:orientation="horizontal"
                 app:layout_collapseMode="parallax">
 
+                <TextView
+                    android:padding="8dp"
+                    android:id="@+id/tv_send_command"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="16dp"
+                    android:background="?attr/selectableItemBackground"
+                    android:clickable="true"
+                    android:drawableEnd="@drawable/ic_expand_more"
+                    android:focusable="true"
+                    android:gravity="center_vertical"
+                    android:text="@string/command_dropdown_title"
+                    android:textColor="#000" />
+
                 <ImageButton
                     android:id="@+id/toggle_layout"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_alignParentEnd="true"
+                    android:layout_centerVertical="true"
                     android:layout_marginEnd="8dp"
                     android:layout_marginBottom="8dp"
                     android:background="@android:color/transparent"
@@ -93,9 +108,8 @@
                 android:layout_below="@id/iv_empty_box"
                 android:layout_marginTop="8dp"
                 android:gravity="center"
-                android:text="No captures yet"
-                android:textSize="18sp"
-                />
+                android:text="@string/no_captures"
+                android:textSize="18sp" />
 
         </RelativeLayout>
 

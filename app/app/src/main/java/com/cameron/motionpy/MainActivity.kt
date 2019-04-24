@@ -26,6 +26,7 @@ import com.google.firebase.database.FirebaseDatabase
 import com.google.firebase.storage.FirebaseStorage
 import kotlinx.android.synthetic.main.activity_main.*
 import okhttp3.*
+import org.json.JSONObject
 import java.io.IOException
 
 class MainActivity : AppCompatActivity(), ChildEventListener {
@@ -83,10 +84,6 @@ class MainActivity : AppCompatActivity(), ChildEventListener {
             }
         }
 
-        adapter.onEntryClickListener = { entryId ->
-            Toast.makeText(this, "id: $entryId", Toast.LENGTH_LONG).show()
-        }
-
         databaseRef.addChildEventListener(this)
 
         recycler_view.layoutManager = linearManager
@@ -123,6 +120,15 @@ class MainActivity : AppCompatActivity(), ChildEventListener {
         })
 
         touchHelper.attachToRecyclerView(recycler_view)
+
+        tv_send_command.setOnClickListener {
+            val fragment = CommandsFragment()
+            fragment.setClickListener { command ->
+                sendCommand(command)
+                fragment.dismiss()
+            }
+            fragment.show(supportFragmentManager, fragment.tag)
+        }
     }
 
     override fun onCreateOptionsMenu(menu: Menu?): Boolean {
@@ -131,10 +137,6 @@ class MainActivity : AppCompatActivity(), ChildEventListener {
     }
 
     override fun onOptionsItemSelected(item: MenuItem?): Boolean {
-        when (item?.itemId) {
-            R.id.action_start -> sendCommand("start", item)
-            R.id.action_stop -> sendCommand("stop", item)
-        }
         return true
     }
 
@@ -170,23 +172,32 @@ class MainActivity : AppCompatActivity(), ChildEventListener {
 
     override fun onChildChanged(dataSnapshot: DataSnapshot, prevChild: String?) {}
 
-    private fun sendCommand(command: String, item: MenuItem?) {
-        // Disable the command from the menu so the same command
-        // can't be sent multiple times
-        item?.isEnabled = false
+    private fun sendCommand(command: String) {
+        // Disable the command menu so multiple commands
+        // cant be sent at once
+        tv_send_command.isEnabled = false
         val request = Request.Builder()
                 .url(Config.URL)
                 .addHeader("key", Config.SERVER_KEY)
                 .addHeader("command", command)
                 .build()
+
         client.newCall(request).enqueue(object : Callback {
+
             override fun onFailure(call: Call, e: IOException) {
+                runOnUiThread { tv_send_command.isEnabled = true }
+                Toast.makeText(
+                        this@MainActivity,
+                        "An error occurred while sending command",
+                        Toast.LENGTH_LONG
+                ).show()
                 Log.i(tag, "Error", e)
             }
 
             override fun onResponse(call: Call, response: Response) {
-                runOnUiThread { item?.isEnabled = true }
-                Log.i(tag, "Response: ${response.body()?.string()}")
+                runOnUiThread { tv_send_command.isEnabled = true }
+                val json = JSONObject(response.body()?.string())
+                Log.i(tag, "$json")
             }
         })
     }
