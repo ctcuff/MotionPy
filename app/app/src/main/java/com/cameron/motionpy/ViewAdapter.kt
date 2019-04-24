@@ -6,13 +6,13 @@ import android.support.v7.widget.RecyclerView
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.Toast
 import com.squareup.picasso.Picasso
 import kotlinx.android.synthetic.main.rv_item_grid.view.*
 import kotlinx.android.synthetic.main.rv_item_list.view.*
 
 class ViewAdapter : RecyclerView.Adapter<ViewAdapter.ViewHolder>() {
 
-    var onEntryClickListener: (String) -> Unit = { }
     private val entries = mutableListOf<Entry>()
     private var useGrid = false
 
@@ -65,7 +65,7 @@ class ViewAdapter : RecyclerView.Adapter<ViewAdapter.ViewHolder>() {
         }
 
         override fun onClick(view: View?) {
-            onEntryClickListener(entries[adapterPosition].id!!)
+            Toast.makeText(view?.context, "id: ${entries[adapterPosition].id}", Toast.LENGTH_LONG).show()
         }
     }
 }
