@@ -15,8 +15,10 @@ class CommandsFragment : BottomSheetDialogFragment() {
         val view = inflater.inflate(R.layout.bottom_sheet_view, container)
 
         with(view) {
-            tv_start.setOnClickListener { clickListener("start") }
-            tv_pause.setOnClickListener { clickListener("pause") }
+            tv_start.setOnClickListener { clickListener(Commands.START) }
+            tv_pause.setOnClickListener { clickListener(Commands.PAUSE) }
+            tv_stop.setOnClickListener { clickListener(Commands.STOP) }
+            tv_power_off.setOnClickListener { clickListener(Commands.POWER_OFF) }
         }
 
         return view

@@ -1,13 +1,11 @@
 package com.cameron.motionpy
 
-import android.content.BroadcastReceiver
-import android.content.Context
-import android.content.Intent
-import android.content.IntentFilter
+import android.content.*
 import android.graphics.Color
 import android.os.Bundle
 import android.support.design.widget.Snackbar
 import android.support.v4.content.ContextCompat
+import android.support.v7.app.AlertDialog
 import android.support.v7.app.AppCompatActivity
 import android.support.v7.widget.DividerItemDecoration
 import android.support.v7.widget.GridLayoutManager
@@ -28,12 +26,17 @@ import kotlinx.android.synthetic.main.activity_main.*
 import okhttp3.*
 import org.json.JSONObject
 import java.io.IOException
+import java.util.concurrent.TimeUnit
 
 class MainActivity : AppCompatActivity(), ChildEventListener {
 
     private val tag = MainActivity::class.java.simpleName
-    private val client = OkHttpClient()
+
     private val adapter = ViewAdapter()
+    private val client = OkHttpClient.Builder()
+            .connectTimeout(20, TimeUnit.SECONDS)
+            .readTimeout(20, TimeUnit.SECONDS)
+            .build()
 
     // These lists save deleted items and their properties
     // so they can be added back to the adapter if "Undo" is pressed
@@ -43,6 +46,8 @@ class MainActivity : AppCompatActivity(), ChildEventListener {
 
     private val storageRef = FirebaseStorage.getInstance().getReference("captures")
     private val databaseRef = FirebaseDatabase.getInstance().getReference("/")
+
+    private lateinit var prefs: SharedPreferences
 
     // This is the receiver that listens for changes in status or
     // configuration of the Raspberry Pi
@@ -61,6 +66,8 @@ class MainActivity : AppCompatActivity(), ChildEventListener {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
         setSupportActionBar(toolbar)
+
+        prefs = getSharedPreferences(packageName, Context.MODE_PRIVATE)
 
         var useGrid = false
         val linearManager = LinearLayoutManager(this, LinearLayoutManager.VERTICAL, false)
@@ -124,7 +131,19 @@ class MainActivity : AppCompatActivity(), ChildEventListener {
         tv_send_command.setOnClickListener {
             val fragment = CommandsFragment()
             fragment.setClickListener { command ->
-                sendCommand(command)
+                // Give the "power_off" command a confirmation dialog just
+                // in case it was press accidentally
+                if (command == Commands.POWER_OFF) {
+                    with(AlertDialog.Builder(this, R.style.AlertDialogCustom)) {
+                        setTitle(getString(R.string.dialog_title))
+                        setMessage(getString(R.string.dialog_message))
+                        setNegativeButton(android.R.string.cancel) { _, _ -> }
+                        setPositiveButton(android.R.string.yes) { _, _ -> sendCommand(command) }
+                        show()
+                    }
+                } else {
+                    sendCommand(command)
+                }
                 fragment.dismiss()
             }
             fragment.show(supportFragmentManager, fragment.tag)
@@ -132,11 +151,33 @@ class MainActivity : AppCompatActivity(), ChildEventListener {
     }
 
     override fun onCreateOptionsMenu(menu: Menu?): Boolean {
+        // Makes sure the alert icon updates in the toolbar when
+        // the app is first launched
         menuInflater.inflate(R.menu.menu_main, menu)
+        menu?.findItem(R.id.action_settings)?.icon = ContextCompat.getDrawable(this,
+                if (getNotificationPref()) R.drawable.ic_notifications_active
+                else R.drawable.ic_notifications_off
+        )
         return true
     }
 
     override fun onOptionsItemSelected(item: MenuItem?): Boolean {
+        if (item?.itemId == R.id.action_settings) {
+            prefs.edit()
+                    .putBoolean(getString(R.string.pref_notif_key), !getNotificationPref())
+                    .apply()
+
+            item.icon = ContextCompat.getDrawable(this,
+                    if (getNotificationPref()) R.drawable.ic_notifications_active
+                    else R.drawable.ic_notifications_off)
+
+            Snackbar.make(root,
+                    getString(
+                            if (getNotificationPref()) R.string.notification_alert_on
+                            else R.string.notification_alert_off),
+                    Snackbar.LENGTH_LONG
+            ).show()
+        }
         return true
     }
 
@@ -145,8 +186,8 @@ class MainActivity : AppCompatActivity(), ChildEventListener {
         registerReceiver(receiver, IntentFilter(NotificationService.DATA_MSG_BROADCAST))
     }
 
-    override fun onDestroy() {
-        super.onDestroy()
+    override fun onPause() {
+        super.onPause()
         unregisterReceiver(receiver)
     }
 
@@ -172,10 +213,27 @@ class MainActivity : AppCompatActivity(), ChildEventListener {
 
     override fun onChildChanged(dataSnapshot: DataSnapshot, prevChild: String?) {}
 
+    private fun toggleEmptyView(show: Boolean) {
+        tv_no_captures.visibility = if (show) View.VISIBLE else View.INVISIBLE
+        iv_empty_box.visibility = if (show) View.VISIBLE else View.INVISIBLE
+    }
+
+    private fun getNotificationPref(): Boolean =
+            prefs.getBoolean(
+                    getString(R.string.pref_notif_key),
+                    resources.getBoolean(R.bool.show_notifications)
+            )
+
+    /**
+     * Sends the specified command to the server which
+     * sends that command to the Raspberry PI
+     * */
     private fun sendCommand(command: String) {
         // Disable the command menu so multiple commands
-        // cant be sent at once
+        // can't be sent at once
         tv_send_command.isEnabled = false
+        tv_send_command.alpha = 0.25f
+
         val request = Request.Builder()
                 .url(Config.URL)
                 .addHeader("key", Config.SERVER_KEY)
@@ -183,30 +241,41 @@ class MainActivity : AppCompatActivity(), ChildEventListener {
                 .build()
 
         client.newCall(request).enqueue(object : Callback {
+            private fun showErrorSnackbar(msg: String) {
+                Snackbar.make(root, msg, Snackbar.LENGTH_LONG)
+                        .setActionTextColor(ContextCompat.getColor(this@MainActivity, R.color.snackbarAction))
+                        .setAction("Retry") { sendCommand(command) }
+                        .show()
+            }
 
             override fun onFailure(call: Call, e: IOException) {
-                runOnUiThread { tv_send_command.isEnabled = true }
-                Toast.makeText(
-                        this@MainActivity,
-                        "An error occurred while sending command",
-                        Toast.LENGTH_LONG
-                ).show()
+                runOnUiThread {
+                    tv_send_command.isEnabled = true
+                    tv_send_command.alpha = 1f
+                    showErrorSnackbar("An error occurred: ${e.message}")
+                }
                 Log.i(tag, "Error", e)
             }
 
             override fun onResponse(call: Call, response: Response) {
-                runOnUiThread { tv_send_command.isEnabled = true }
                 val json = JSONObject(response.body()?.string())
+                runOnUiThread {
+                    tv_send_command.isEnabled = true
+                    tv_send_command.alpha = 1f
+                }
                 Log.i(tag, "$json")
+
+                if (json["status"] != 200) {
+                    runOnUiThread { showErrorSnackbar("${json["error_msg"]}") }
+                }
             }
         })
     }
 
-    fun toggleEmptyView(show: Boolean) {
-        tv_no_captures.visibility = if (show) View.VISIBLE else View.INVISIBLE
-        iv_empty_box.visibility = if (show) View.VISIBLE else View.INVISIBLE
-    }
-
+    /**
+     * Shows a Snackbar with the option to
+     * un-delete a previously deleted item.
+     * */
     private fun showDeleteSnackbar() {
         if (deletedEntryQueue.isEmpty())
             return
@@ -215,7 +284,8 @@ class MainActivity : AppCompatActivity(), ChildEventListener {
         val formattedRemoved = resources.getQuantityString(R.plurals.items_removed, size, size)
         val formattedDeleted = resources.getQuantityString(R.plurals.items_deleted, size, size)
 
-        val snackbar = Snackbar.make(root, formattedRemoved, Snackbar.LENGTH_LONG)
+        Snackbar.make(root, formattedRemoved, Snackbar.LENGTH_LONG)
+                .setActionTextColor(ContextCompat.getColor(this, R.color.snackbarAction))
                 .addCallback(object : Snackbar.Callback() {
                     override fun onDismissed(transientBottomBar: Snackbar?, event: Int) {
                         // Clears all queues when the snackbar dismisses itself
@@ -224,25 +294,24 @@ class MainActivity : AppCompatActivity(), ChildEventListener {
                             clearQueue()
                         }
                     }
-                }).setActionTextColor(Color.rgb(66, 134, 244))
+                }).setAction("Undo") {
+                    // Add the deleted item back to the adapter and
+                    // remove it from the queue
+                    if (deletedEntryQueue.isNotEmpty()) {
+                        val removedItem = deletedEntryQueue.last()
+                        val removedPosition = deletedPositions.last()
 
-        // Add the deleted item back to the adapter and
-        // remove it from the queue
-        snackbar.setAction("Undo") {
-            if (deletedEntryQueue.isNotEmpty()) {
-                val removedItem = deletedEntryQueue.last()
-                val removedPosition = deletedPositions.last()
+                        deletedEntryQueue.removeAt(deletedEntryQueue.lastIndex)
+                        deletedPositions.removeAt(deletedPositions.lastIndex)
+                        deletedIdQueue.removeAt(deletedIdQueue.lastIndex)
 
-                deletedEntryQueue.removeAt(deletedEntryQueue.lastIndex)
-                deletedPositions.removeAt(deletedPositions.lastIndex)
-                deletedIdQueue.removeAt(deletedIdQueue.lastIndex)
-
-                adapter.addItem(removedItem, removedPosition)
-                showDeleteSnackbar()
-                toggleEmptyView(false)
-            }
-        }
-        snackbar.show()
+                        adapter.addItem(removedItem, removedPosition)
+                        toggleEmptyView(false)
+                        // Keep showing the Snackbar while there
+                        // are still items in the queue
+                        showDeleteSnackbar()
+                    }
+                }.show()
     }
 
     private fun clearQueue() {

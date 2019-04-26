@@ -7,27 +7,26 @@
     <TextView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginEnd="16dp"
         android:layout_marginStart="16dp"
         android:layout_marginTop="16dp"
+        android:layout_marginEnd="16dp"
         android:layout_marginBottom="12dp"
         android:text="@string/send_command"
         android:textSize="16sp" />
 
     <TextView
-        style="@style/ClickableText"
         android:id="@+id/tv_start"
+        style="@style/ClickableText"
         android:drawableStart="@drawable/ic_play_arrow"
         android:paddingStart="16dp"
         android:paddingTop="8dp"
         android:paddingEnd="16dp"
         android:paddingBottom="8dp"
-        android:text="@string/command_start"/>
+        android:text="@string/command_start" />
 
     <TextView
-        style="@style/ClickableText"
         android:id="@+id/tv_pause"
-        android:layout_marginBottom="8dp"
+        style="@style/ClickableText"
         android:drawableStart="@drawable/ic_pause"
         android:focusable="true"
         android:paddingStart="16dp"
@@ -35,5 +34,32 @@
         android:paddingEnd="16dp"
         android:paddingBottom="8dp"
         android:text="@string/command_pause" />
+
+    <TextView
+        android:id="@+id/tv_stop"
+        style="@style/ClickableText"
+        android:drawableStart="@drawable/ic_stop"
+        android:focusable="true"
+        android:paddingStart="16dp"
+        android:paddingTop="8dp"
+        android:paddingEnd="16dp"
+        android:paddingBottom="8dp"
+        android:text="@string/command_stop" />
+
+    <TextView
+        android:id="@+id/tv_power_off"
+        style="@style/ClickableText"
+        android:drawableStart="@drawable/ic_power_off"
+        android:focusable="true"
+        android:paddingStart="16dp"
+        android:paddingTop="8dp"
+        android:paddingEnd="16dp"
+        android:paddingBottom="8dp"
+        android:text="@string/command_power_off" />
+
+    <View
+        android:backgroundTint="@color/colorPrimary"
+        android:layout_width="match_parent"
+        android:layout_height="8dp"/>
 
 </LinearLayout>

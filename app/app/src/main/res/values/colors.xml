@@ -4,4 +4,5 @@
     <color name="colorPrimaryDark">#c7c7c7</color>
     <color name="colorSecondaryDark">#373737</color>
     <color name="colorAccent">#ffffff</color>
+    <color name="snackbarAction">#4286f4</color>
 </resources>

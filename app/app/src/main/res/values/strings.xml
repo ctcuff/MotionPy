@@ -9,4 +9,9 @@
     <string name="command_power_off">Turn off Raspberry Pi</string>
     <string name="action_settings">Show notifications</string>
     <string name="command_stop">Stop sensor</string>
+    <string name="notification_alert_on">You\'ll be notified when movement is detected.</string>
+    <string name="notification_alert_off">You won\'t be notified when movement is detected.</string>
+
+    <string name="dialog_title">Power off</string>
+    <string name="dialog_message">Are you sure you want to power off your Raspberry Pi? You\'ll have to power it back on manually.</string>
 </resources>
