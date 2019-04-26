@@ -1,10 +1,12 @@
 <resources>
     <string name="app_name">MotionPy</string>
-    <string name="action_settings">Settings</string>
     <string name="capture_time">Captured: %s</string>
     <string name="command_start">Start sensor</string>
     <string name="command_pause">Pause sensor</string>
     <string name="send_command">Send command</string>
     <string name="command_dropdown_title">Command</string>
     <string name="no_captures">No captures yet</string>
+    <string name="command_power_off">Turn off Raspberry Pi</string>
+    <string name="action_settings">Show notifications</string>
+    <string name="command_stop">Stop sensor</string>
 </resources>

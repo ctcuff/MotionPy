@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="pref_notif_key">notifications</string>
+    <bool name="show_notifications">true</bool>
+</resources>

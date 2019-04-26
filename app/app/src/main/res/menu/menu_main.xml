@@ -3,14 +3,9 @@
     xmlns:tools="http://schemas.android.com/tools"
     tools:context="com.cameron.motionpy.MainActivity">
     <item
-        android:id="@+id/action_start"
+        android:id="@+id/action_settings"
         android:orderInCategory="100"
-        android:title="START"
-        app:showAsAction="never" />
-
-    <item
-        android:id="@+id/action_stop"
-        android:orderInCategory="200"
-        android:title="STOP"
-        app:showAsAction="never" />
+        android:icon="@drawable/ic_notifications_active"
+        android:title="@string/action_settings"
+        app:showAsAction="always" />
 </menu>

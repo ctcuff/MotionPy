@@ -31,6 +31,8 @@ class NotificationService : FirebaseMessagingService() {
 
         val isDataMsg = data["is_data_message"]?.toBoolean() ?: false
 
+        // This message isn't a notification and contains data about
+        // the Raspberry Pi's config
         if (isDataMsg) {
             val intent = Intent(DATA_MSG_BROADCAST)
             intent.putExtra("isPaused", data["is_paused"]?.toBoolean())
@@ -41,6 +43,17 @@ class NotificationService : FirebaseMessagingService() {
         }
 
         Log.i(tag, data.toString())
+
+        // Don't show any notifications if the user has
+        // disabled notifications
+        val prefs = getSharedPreferences(packageName, Context.MODE_PRIVATE)
+        val showNotifications = prefs.getBoolean(
+                getString(R.string.pref_notif_key),
+                resources.getBoolean(R.bool.show_notifications)
+        )
+
+        if (!showNotifications)
+            return
 
         val imgUrl = data["img_url"] ?: ""
         val isError = data["is_error"]?.toBoolean() ?: false
