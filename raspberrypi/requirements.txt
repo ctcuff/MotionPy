@@ -4,4 +4,5 @@ Pyrebase==3.0.27
 firebase_admin==2.16.0
 beautifulsoup4==4.7.1
 picamera==1.13
-gevent_socketio==0.3.6
+python-socketio==4.0.0
+schedule==0.6.0
