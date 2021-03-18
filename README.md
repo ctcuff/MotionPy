@@ -7,7 +7,7 @@ There is a distance sensor attatched to the Raspberry Pi that reads a fixed dist
 
 ### Required parts
 1) [Raspberry Pi 3](https://www.adafruit.com/product/3775?gclid=Cj0KCQjw7sDlBRC9ARIsAD-pDFraBQQclP4U5d4Z5qLc5kEgVZE71GuaBx1SW1VR0xpsSzxjjSjf1ycaAuubEALw_wcB)
-2) [5v power adapter with USB Type-C cable](https://www.amazon.com/s?k=5v+2.5a+adapter&ref=nb_sb_noss_1)
+2) [5v power adapter with micro USB cable](https://www.amazon.com/s?k=5v+2.5a+adapter&ref=nb_sb_noss_1)
 3) [HC-SR04 Distance sensor](https://www.amazon.com/gp/product/B01GNEHJNC/ref=ppx_yo_dt_b_asin_title_o06_s00?ie=UTF8&psc=1)
 4) [5.5×8.2×0.85cm Mini breadboard](https://www.amazon.com/gp/product/B0135IQ0ZC/ref=ppx_yo_dt_b_asin_title_o05_s00?ie=UTF8&psc=1)
 5) [3 1k ohm resistors](https://www.amazon.com/gp/product/B07HDDWFDD/ref=ppx_yo_dt_b_asin_title_o05_s01?ie=UTF8&psc=1)
